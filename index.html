@@ -1,0 +1,374 @@
+<html>
+
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/dojo.xd.js" type="text/javascript" djConfig="baseUrl: './scripts/', modulePaths: {mwe: 'mwe'} "></script>
+<script src="scripts/thirdparty/soundmanager2.js"></script>
+
+<script src="scripts/mwe/Sprite.js" type="text/javascript"></script>
+<script src="scripts/mwe/GameCore.js" type="text/javascript"></script>
+<script src="scripts/mwe/Animation.js" type="text/javascript"></script>
+<script src="scripts/mwe/Sprite.js" type="text/javascript"></script>
+<script src="scripts/mwe/reiner/Creature.js" type="text/javascript"></script>
+
+<style>
+
+canvas{
+	border: 1px solid #BADA55;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+	<br>
+	<center>	
+	<canvas width="640" height="480" id="drawing"></canvas><br>
+		Use Arrow keys.
+	</center>	
+		
+</body>
+
+<script>
+dojo.require('mwe.GameCore');
+dojo.require('mwe.Sprite');
+dojo.require('mwe.ResourceManager');
+dojo.require('mwe.GameAction');
+dojo.require('mwe.reiner.Creature');
+
+
+
+  var face,drunk,sprite,srpite2,backgroundImg,fartSound,anvilSound,soldier,spriteList;
+  var gameWidth = 800;
+  var gameHeight = 600;
+  spriteList = [];
+
+  
+  soundManager.url = '/nge/swf/';
+	//soundManager.flashVersion = 9; // optional: shiny features (default = 8)
+	//soundManager.useFlashBlock = false; // optionally, enable when you're ready to dive in
+	// enable HTML5 audio support, if you're feeling adventurous. iPad/iPhone will always get this.
+	 soundManager.useHTML5Audio = true;
+	soundManager.debugMode = false;
+	
+	soundManager.onready(function() {
+	  // Ready to use; soundManager.createSound() etc. can now be called.
+	   fartSound = soundManager.createSound({
+		id: 'aSound',
+		url: 'sounds/fart.mp3'
+		// onload: [ event handler function object ],
+		// other options here..
+	  });
+	  
+	  anvilSound = soundManager.createSound({
+		id: 'anvilSound',
+		url: 'sounds/anvil.mp3'
+		// onload: [ event handler function object ],
+		// other options here..
+	  });
+
+	});
+
+
+	var playSound = function(sound){
+		if(sound){
+			sound.play();
+		}else{
+			console.log("sound not loaded");
+		}
+	};
+	
+	  
+		  
+
+	  
+  
+  dojo.addOnLoad(function(){
+ 
+
+	var resourceManager = new mwe.ResourceManager({
+		imageDir: 'images/'
+	});
+	backgroundImg = resourceManager.loadImage('background_800.png');
+	face = resourceManager.loadImage('GHappyAdrian.png');
+	drunk =  resourceManager.loadImage('DrunkAdrian.png');
+	var bwi = resourceManager.loadImage('builder/walking_b.png');
+	var swi2 = resourceManager.loadImage('soldier/walking_b.png');
+	var sshi = resourceManager.loadImage('soldier/shooting.png');
+	var sgi = resourceManager.loadImage('soldier/greeting_b.png');
+	var gwi = resourceManager.loadImage('girl/walking_b.png');
+	var gzwi = resourceManager.loadImage('greenZombie/walking_b.png');
+	var gzdi = resourceManager.loadImage('greenZombie/dying_b.png');
+	var gzii = resourceManager.loadImage('greenZombie/talking_b.png');
+
+	for(var i = 0; i < 3; i++){
+		var zombie = new mwe.reiner.Creature({
+			x:Math.random() * (gameWidth - 96),
+			y:Math.random() * (gameHeight - 96),
+			w: 96,
+			h: 96,
+			dx: 0.02 + Math.random() * 0.03,
+			dy: 0.02 + Math.random() * 0.03,
+			xStartVelocity: 0.02 + Math.random() * 0.03,
+			yStartVelocity: 0.02 + Math.random() * 0.03,
+			collisionRadius: 20		
+		  });
+
+		zombie.name = 'z'+ i;
+		zombie.walkingAnims = zombie.createAnimations(8,125,gzwi,96,96,0);
+		zombie.idleAnims = zombie.createAnimations(8,125,gzii,96,96,0);
+		zombie.dyingAnims = zombie.createAnimations(9,125,gzdi,96,96,0);
+
+		spriteList.push(zombie);
+	}
+	
+
+	sprite = new mwe.reiner.Creature({
+		x:0,
+		y:0,
+		w: 96,
+		h: 96,
+		dx: 0.2,
+		dy: 0.2,
+		xStartVelocity: 0.2,
+		yStartVelocity: 0.2,
+		collisionRadius: 20,
+		name: 'player'	
+	  });
+
+	
+	sprite.walkingAnims = sprite.createAnimations(8,75,swi2,96,96,0);
+	sprite.dyingAnims = sprite.createAnimations(8,75,swi2,96,96,0);
+	sprite.idleAnims = sprite.createAnimations(9,[3000,150,150, 150,1000,150, 150,150,3000],sgi,96,96,0);
+
+	girl = new mwe.reiner.Creature({
+		x:100,
+		y:200,
+		w: 50,
+		h: 50,
+		dx: 0.15,
+		dy: 0.12,
+		xStartVelocity: 0.15,
+		yStartVelocity: 0.12,
+		collisionRadius: 20,
+		walkingAnims: sprite.createAnimations(8,75,gwi,96,96,0),
+		idleAnims: sprite.createAnimations(8,75,gwi,96,96,0),
+		talkingAnims: sprite.createAnimations(8,75,gwi,96,96,0),
+		name: 'girl'
+		
+	  });
+	
+	  
+	
+	 
+	soldier = new mwe.reiner.Creature({
+		x:10, y: 150,dx:0.2,dy:0.1,h:80,w:80,
+		walkingAnims: sprite.createAnimations(8,75,bwi,96,96,0),
+		idleAnims: sprite.createAnimations(8,75,bwi,96,96,0),
+		talkingAnims: sprite.createAnimations(8,75,bwi,96,96,0),
+		name: 'cw'
+	});
+
+	spriteList.push(sprite);
+	spriteList.push(girl);
+	spriteList.push(soldier);
+		
+	var game = new mwe.GameCore({
+		canvasId: 'drawing',
+		height: gameHeight,
+		width: gameWidth,
+		resourceManager: resourceManager,
+		loadingBackground: '#000',
+		loadingForeground: '#BADA55',
+		initInput: function(im) {
+  
+	        this.moveLeft = new mwe.GameAction({name:"moveLeft"});
+	        this.moveRight = new mwe.GameAction({name:"moveRight"});
+	        this.moveUp = new mwe.GameAction({name:"moveUp"});
+	        this.moveDown = new mwe.GameAction({name:"moveDown"});
+	        this.exit = new mwe.GameAction({name:"exit", behavior: this.moveLeft.statics.DETECT_INITAL_PRESS_ONLY});
+
+	   
+	        im.mapToKey(this.moveLeft, dojo.keys.LEFT_ARROW);
+	        im.mapToKey(this.moveRight, dojo.keys.RIGHT_ARROW);
+	        im.mapToKey(this.moveUp, dojo.keys.UP_ARROW);
+	        im.mapToKey(this.moveDown, dojo.keys.DOWN_ARROW);
+	        im.mapToKey(this.exit, dojo.keys.ESCAPE);
+	        
+	    }		
+
+	});
+
+
+	game.update = function(elapsedTime){
+
+
+		this.handleInput();
+		var playAnvil = false;
+		
+		//update sprite location and check wall collisions
+		dojo.forEach(spriteList,function(s){
+			s.hasCollided = false;
+			s.hasHitWall = false;
+			s.update(elapsedTime);
+			
+			if(handleWalls(s)){
+				playAnvil = true;
+				s.hasHitWall = false;
+			}
+
+		});
+
+
+		dojo.forEach(spriteList,function(s){
+
+			//check if sprite has collided with other sprites
+			if(!s.hasCollided && !s.hasHitWall){
+				dojo.forEach(spriteList,function(otherS){
+					if(s != otherS){
+						if(intersectSprite(s,otherS)){
+							s.hasCollided = true;
+							otherS.hasCollided = true;
+						}
+					}
+				});
+			}
+
+			if((s != sprite) && s.hasCollided && !s.hasHitWall){
+				flipX(s);
+				flipY(s);
+				s.update(elapsedTime); //move a little further in the new direction
+			}
+
+			
+		});
+
+
+		//makes sure sprites in front get painted last to preserve 3d look
+		spriteList.sort(function(a,b){return a.y - b.y;}); 
+		
+	  };
+
+
+	  
+	  
+	  game.draw = function(context){
+		//context.clearRect(0,0, 640,480);
+		context.drawImage(backgroundImg, 0,0);
+		dojo.forEach(spriteList,function(s){
+			s.drawCurrentFrame(context);
+		});
+	  };
+
+
+	  game.handleInput = function(){
+			if(this.moveLeft.isPressed()){
+				sprite.dx = Math.abs(sprite.xStartVelocity) * -1;
+			}
+			else if(this.moveRight.isPressed()){
+				sprite.dx = Math.abs(sprite.xStartVelocity);
+			}
+			else{
+				sprite.dx = 0;
+			}
+
+			if(this.moveUp.isPressed()){
+				sprite.dy = Math.abs(sprite.yStartVelocity) * -1;	
+			}
+			else if(this.moveDown.isPressed()){
+				sprite.dy = Math.abs(sprite.yStartVelocity);
+			}
+			else{
+				sprite.dy = 0;
+			}
+
+	  }; 
+	
+
+	
+	game.run();
+	
+	
+
+  
+  });
+  
+
+  
+  var jump = 5;
+  var playFart = false;
+  
+  
+  var handleWalls = function(s){
+	var hitWall = false;
+	
+	if(s.x > (gameWidth - s.w)){
+		s.x = s.x - jump;
+		flipX(s);
+		hitWall = true;
+	}else if(s.x < 0){
+		s.x = s.x + jump;
+		flipX(s);
+		hitWall = true;
+	}
+	
+	if(s.y > (gameHeight - s.h)){
+		s.y = s.y - jump;
+		flipY(s);
+		hitWall = true;
+	}else if(s.y < 0){
+		s.y = s.y + jump;
+		flipY(s);
+		hitWall = true;
+	}
+	
+	return hitWall;
+  };
+  
+  var flipX = function(s){
+	 s.dx = s.dx * -1;
+  };
+  
+  var flipY = function(s){
+	 s.dy = s.dy * -1;
+  };
+  
+  
+
+  
+	var intersectSprite = function (s1, s2) {
+
+
+		var distance_squared = Math.pow((s1.x + (s1.anim.width/2)) - (s2.x + (s2.anim.width/2)),2) + Math.pow((s1.y + (s1.anim.height/2)) - (s2.y + (s2.anim.height/2)),2);
+		var radii_squared = Math.pow(s1.collisionRadius + s2.collisionRadius,2);
+		return distance_squared < radii_squared;  // true if intersect
+
+		
+		//return !(r2.x > (r1.x + r1.w) || 
+		//	(r2.x + r2.w) < r1.x || 
+		//	r2.y > (r1.y + r1.h) ||
+		//	(r2.y + r2.h) < r1.y);
+		
+	};
+  
+ 
+ var changeDirection = function(){
+	sprite.dy = sprite.dy * -1;
+	sprite.dx = sprite.dx * -1;
+ };
+
+  
+  
+
+  
+  
+
+
+
+
+
+</script>
+
+		 
